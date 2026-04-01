@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosya Paylaşım Merkezi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #9ca3af;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            width: 100%;
+            max-width: 600px;
+            border: 2px dashed rgba(167, 139, 250, 0.4);
+            border-radius: 20px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(167, 139, 250, 0.8);
+            background: rgba(167, 139, 250, 0.06);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(167, 139, 250, 0.15);
+        }
+
+        .upload-area.drag-over {
+            border-color: #a78bfa;
+            background: rgba(167, 139, 250, 0.12);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(167, 139, 250, 0); }
+        }
+
+        .upload-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #d1d5db;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* File List */
+        .file-list-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .file-list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .file-list-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #c4b5fd;
+        }
+
+        .file-count {
+            font-size: 0.85rem;
+            color: #6b7280;
+            background: rgba(167, 139, 250, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(167, 139, 250, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e5e7eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            color: white;
+        }
+
+        .btn-download:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+        }
+
+        .btn-download:active {
+            transform: scale(0.97);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: scale(1.05);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            fill: #374151;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(16, 185, 129, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .upload-area {
+                padding: 35px 20px;
+            }
+
+            .file-card {
+                flex-wrap: wrap;
+            }
+
+            .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📂 Dosya Paylaşım Merkezi</h1>
+    <p class="subtitle">Dosyalarınızı yükleyin, tek tıkla indirin</p>
+
+    <!-- Upload Area -->
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+        </div>
+        <p class="upload-text">Dosya yüklemek için tıklayın veya sürükleyin</p>
+        <p class="upload-hint">Tüm dosya türleri desteklenir</p>
+        <input type="file" id="fileInput" multiple>
+    </div>
+
+    <!-- File List -->
+    <div class="file-list-container">
+        <div class="file-list-header" id="fileListHeader" style="display: none;">
+            <span class="file-list-title">Yüklenen Dosyalar</span>
+            <span class="file-count" id="fileCount">0 dosya</span>
+        </div>
+        <div class="file-list" id="fileList">
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                <p>Henüz dosya eklenmedi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileListHeader = document.getElementById('fileListHeader');
+        const fileCount = document.getElementById('fileCount');
+        const emptyState = document.getElementById('emptyState');
+        const toast = document.getElementById('toast');
+
+        let files = [];
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = '';
+        });
+
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(filesList) {
+            for (const file of filesList) {
+                const fileData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    blob: file,
+                    url: URL.createObjectURL(file),
+                    date: new Date()
+                };
+                files.push(fileData);
+            }
+            renderFileList();
+            showToast(`${filesList.length} dosya başarıyla eklendi ✓`);
+        }
+
+        function renderFileList() {
+            if (files.length === 0) {
+                emptyState.style.display = 'block';
+                fileListHeader.style.display = 'none';
+                // Clear only file cards, keep empty state
+                const cards = fileList.querySelectorAll('.file-card');
+                cards.forEach(c => c.remove());
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            fileListHeader.style.display = 'flex';
+            fileCount.textContent = `${files.length} dosya`;
+
+            // Clear existing cards
+            const cards = fileList.querySelectorAll('.file-card');
+            cards.forEach(c => c.remove());
+
+            files.forEach((file, index) => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.style.animationDelay = `${index * 0.08}s`;
+
+                const ext = getFileExtension(file.name);
+                const color = getExtColor(ext);
+
+                card.innerHTML = `
+                    <div class="file-icon-wrapper" style="background: ${color};">
+                        ${ext || '?'}
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" title="${file.name}">${file.name}</div>
+                        <div class="file-meta">${formatSize(file.size)} • ${formatDate(file.date)}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-download" onclick="downloadFile('${file.id}')" title="İndir">
+                            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            İndir
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteFile('${file.id}')" title="Sil">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </div>
+                `;
+
+                fileList.appendChild(card);
+            });
+        }
+
+        function downloadFile(id) {
+            const file = files.find(f => f.id == id);
+            if (!file) return;
+
+            const a = document.createElement('a');
+            a.href = file.url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast(`"${file.name}" indiriliyor...`);
+        }
+
+        function deleteFile(id) {
+            const index = files.findIndex(f => f.id == id);
+            if (index === -1) return;
+
+            const fileName = files[index].name;
+            URL.revokeObjectURL(files[index].url);
+            files.splice(index, 1);
+            renderFileList();
+            showToast(`"${fileName}" silindi`);
+        }
+
+        function getFileExtension(name) {
+            const parts = name.split('.');
+            return parts.length > 1 ? parts.pop().toLowerCase() : '';
+        }
+
+        function getExtColor(ext) {
+            const colors = {
+                pdf: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                doc: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                docx: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                xls: 'linear-gradient(135deg, #10b981, #059669)',
+                xlsx: 'linear-gradient(135deg, #10b981, #059669)',
+                ppt: 'linear-gradient(135deg, #f97316, #ea580c)',
+                pptx: 'linear-gradient(135deg, #f97316, #ea580c)',
+                jpg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                jpeg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                png: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                gif: 'linear-gradient(135deg, #ec4899, #db2777)',
+                mp4: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+                mp3: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                zip: 'linear-gradient(135deg, #eab308, #ca8a04)',
+                rar: 'linear-gradient(135deg, #eab308, #ca8a04)',
+                txt: 'linear-gradient(135deg, #6b7280, #4b5563)',
+                js: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                html: 'linear-gradient(135deg, #f97316, #ea580c)',
+                css: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            };
+            return colors[ext] || 'linear-gradient(135deg, #6366f1, #4f46e5)';
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
