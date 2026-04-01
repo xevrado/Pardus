@@ -297,15 +297,42 @@
                         <div class="file-meta">${formatSize(file.size)} • ${formatDate(file.date)}</div>
                     </div>
                     <div class="file-actions">
-                        <a href="${file.url}" download="${file.name}" class="btn btn-download" title="İndir">
+                        <button class="btn btn-download" onclick="downloadFile('${file.url}', '${file.name}')" title="İndir">
                             <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                             İndir
-                        </a>
+                        </button>
                     </div>
                 `;
 
                 fileList.appendChild(card);
             });
+        }
+
+        function downloadFile(url, filename) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> İndiriliyor...`;
+            btn.disabled = true;
+
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                })
+                .catch(() => {
+                    window.open(url, '_blank');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
         }
 
         function getFileExtension(name) {
