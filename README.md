@@ -1,1 +1,1 @@
-# Pardus-
+# Pardus
